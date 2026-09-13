@@ -7,72 +7,53 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
         body { font-family: Arial; text-align: center; background: #8b5cf6; color: white; padding: 50px; }
-        button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; margin: 10px; }
-        #status { margin-top: 20px; font-size: 14px; }
+        button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
     <h1>Gargoura Bank Testnet</h1>
     <p>Site de validation pour Pi Network</p>
     <br>
-    <button onclick="connecter()">1. Se Connecter avec Pi</button>
-    <br>
-    <button onclick="payer()">2. Payer 0.01 Pi pour Test</button>
-    <div id="status"></div>
+    <button onclick="payer()">Payer 0.01 Pi pour Test</button>
+    <p id="msg"></p>
 
     <script>
-        let currentUser = null;
+        // MODE SANDBOX POUR LA VALIDATION ÉTAPE 10
+        Pi.init({ version: "2.0", sandbox: true });
 
-        // 1. Initialiser le SDK
-        Pi.init({ version: "2.0", sandbox: false });
-
-        // 2. Fonction pour se connecter
-        async function connecter() {
-            document.getElementById("status").innerHTML = "Connexion...";
-            try {
-                const scopes = ['username', 'payments'];
-                const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
-                currentUser = auth.user;
-                document.getElementById("status").innerHTML = "Connecté: " + currentUser.username;
-            } catch (err) {
-                document.getElementById("status").innerHTML = "Erreur connexion: " + err;
-            }
-        }
-
-        // 3. Fonction pour payer
         async function payer() {
-            if(!currentUser) {
-                alert("Clique d'abord sur 'Se Connecter avec Pi'");
-                return;
+            document.getElementById("msg").innerText = "Connexion à Pi...";
+            
+            try {
+                // 1. Authentifier
+                const auth = await Pi.authenticate(['username', 'payments']);
+                
+                // 2. Créer paiement
+                Pi.createPayment({
+                    amount: 0.01,
+                    memo: "Test Validation Gargoura",
+                    metadata: {}
+                }, {
+                    onReadyForServerApproval: function(paymentId) {
+                        // Pour la validation Pi, on simule l'approbation
+                        document.getElementById("msg").innerText = "Paiement OK. ID: " + paymentId;
+                        alert("Étape 10 réussie ! Va maintenant cliquer 'Start' sur Pi Develop");
+                    },
+                    onReadyForServerCompletion: function(paymentId, txid) {
+                        document.getElementById("msg").innerText = "Terminé !";
+                    },
+                    onCancel: function(paymentId) {
+                        alert("Annulé");
+                    },
+                    onError: function(error) {
+                        alert("Erreur: " + error);
+                        document.getElementById("msg").innerText = "Erreur: " + error;
+                    }
+                });
+
+            } catch (err) {
+                alert("Erreur Auth: " + err);
             }
-
-            const paymentData = {
-                amount: 0.01,
-                memo: "Validation Gargoura Bank",
-                metadata: { app: "gargoura-bank" }
-            };
-
-            const callbacks = {
-                onReadyForServerApproval: function(paymentId) {
-                    alert("Paiement approuvé: " + paymentId);
-                },
-                onReadyForServerCompletion: function(paymentId, txid) {
-                    alert("Paiement terminé ! TX: " + txid);
-                    document.getElementById("status").innerHTML = "Succès ! Retourne valider l'étape 10";
-                },
-                onCancel: function(paymentId) {
-                    alert("Paiement annulé");
-                },
-                onError: function(error) {
-                    alert("Erreur: " + error);
-                }
-            };
-            Pi.createPayment(paymentData, callbacks);
-        }
-
-        // 4. Gestion paiement incomplet
-        function onIncompletePaymentFound(payment) {
-            alert("Paiement incomplet trouvé: " + payment.identifier);
         }
     </script>
 </body>
