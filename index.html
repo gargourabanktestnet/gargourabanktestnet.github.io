@@ -18,26 +18,25 @@
     <p id="msg"></p>
 
     <script>
-        // MODE SANDBOX POUR LA VALIDATION ÉTAPE 10
         Pi.init({ version: "2.0", sandbox: true });
 
         async function payer() {
             document.getElementById("msg").innerText = "Connexion à Pi...";
             
             try {
-                // 1. Authentifier
-                const auth = await Pi.authenticate(['username', 'payments']);
+                await Pi.authenticate(['username', 'payments']);
                 
-                // 2. Créer paiement
                 Pi.createPayment({
                     amount: 0.01,
                     memo: "Test Validation Gargoura",
-                    metadata: {}
+                    metadata: { 
+                        app: "gargoura-bank",  // ICI ON MET QUELQUE CHOSE
+                        type: "validation_test"
+                    }
                 }, {
                     onReadyForServerApproval: function(paymentId) {
-                        // Pour la validation Pi, on simule l'approbation
                         document.getElementById("msg").innerText = "Paiement OK. ID: " + paymentId;
-                        alert("Étape 10 réussie ! Va maintenant cliquer 'Start' sur Pi Develop");
+                        alert("Succès ! Retourne sur Pi Develop > Etape 10 > Start");
                     },
                     onReadyForServerCompletion: function(paymentId, txid) {
                         document.getElementById("msg").innerText = "Terminé !";
@@ -47,7 +46,6 @@
                     },
                     onError: function(error) {
                         alert("Erreur: " + error);
-                        document.getElementById("msg").innerText = "Erreur: " + error;
                     }
                 });
 
