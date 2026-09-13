@@ -7,33 +7,58 @@
     <script src="https://sdk.minepi.com/pi-sdk.js"></script>
     <style>
         body { font-family: Arial; text-align: center; background: #8b5cf6; color: white; padding: 50px; }
-        button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
+        button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; margin: 10px; }
+        #status { margin-top: 20px; font-size: 14px; }
     </style>
 </head>
 <body>
     <h1>Gargoura Bank Testnet</h1>
     <p>Site de validation pour Pi Network</p>
     <br>
-    <button onclick="payer()">Payer 0.01 Pi pour Test</button>
+    <button onclick="connecter()">1. Se Connecter avec Pi</button>
+    <br>
+    <button onclick="payer()">2. Payer 0.01 Pi pour Test</button>
+    <div id="status"></div>
 
     <script>
+        let currentUser = null;
+
+        // 1. Initialiser le SDK
         Pi.init({ version: "2.0", sandbox: false });
 
-        function payer() {
+        // 2. Fonction pour se connecter
+        async function connecter() {
+            document.getElementById("status").innerHTML = "Connexion...";
+            try {
+                const scopes = ['username', 'payments'];
+                const auth = await Pi.authenticate(scopes, onIncompletePaymentFound);
+                currentUser = auth.user;
+                document.getElementById("status").innerHTML = "Connecté: " + currentUser.username;
+            } catch (err) {
+                document.getElementById("status").innerHTML = "Erreur connexion: " + err;
+            }
+        }
+
+        // 3. Fonction pour payer
+        async function payer() {
+            if(!currentUser) {
+                alert("Clique d'abord sur 'Se Connecter avec Pi'");
+                return;
+            }
+
             const paymentData = {
-                amount: 0.01, // Test avec 0.01 Pi
+                amount: 0.01,
                 memo: "Validation Gargoura Bank",
                 metadata: { app: "gargoura-bank" }
             };
 
             const callbacks = {
                 onReadyForServerApproval: function(paymentId) {
-                    console.log("Approuvé:", paymentId);
-                    alert("Paiement approuvé. ID: " + paymentId);
+                    alert("Paiement approuvé: " + paymentId);
                 },
                 onReadyForServerCompletion: function(paymentId, txid) {
-                    console.log("Complet:", paymentId, txid);
-                    alert("Paiement terminé avec succès !");
+                    alert("Paiement terminé ! TX: " + txid);
+                    document.getElementById("status").innerHTML = "Succès ! Retourne valider l'étape 10";
                 },
                 onCancel: function(paymentId) {
                     alert("Paiement annulé");
@@ -43,6 +68,11 @@
                 }
             };
             Pi.createPayment(paymentData, callbacks);
+        }
+
+        // 4. Gestion paiement incomplet
+        function onIncompletePaymentFound(payment) {
+            alert("Paiement incomplet trouvé: " + payment.identifier);
         }
     </script>
 </body>
