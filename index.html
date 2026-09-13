@@ -1,2 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gargoura Bank Testnet</title>
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+    <style>
+        body { font-family: Arial; text-align: center; background: #8b5cf6; color: white; padding: 50px; }
+        button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
     <h1>Gargoura Bank Testnet</h1>
     <p>Site de validation pour Pi Network</p>
+    <br>
+    <button onclick="payer()">Payer 0.01 Pi pour Test</button>
+
+    <script>
+        Pi.init({ version: "2.0", sandbox: false });
+
+        function payer() {
+            const paymentData = {
+                amount: 0.01, // Test avec 0.01 Pi
+                memo: "Validation Gargoura Bank",
+                metadata: { app: "gargoura-bank" }
+            };
+
+            const callbacks = {
+                onReadyForServerApproval: function(paymentId) {
+                    console.log("Approuvé:", paymentId);
+                    alert("Paiement approuvé. ID: " + paymentId);
+                },
+                onReadyForServerCompletion: function(paymentId, txid) {
+                    console.log("Complet:", paymentId, txid);
+                    alert("Paiement terminé avec succès !");
+                },
+                onCancel: function(paymentId) {
+                    alert("Paiement annulé");
+                },
+                onError: function(error) {
+                    alert("Erreur: " + error);
+                }
+            };
+            Pi.createPayment(paymentData, callbacks);
+        }
+    </script>
+</body>
+</html>
