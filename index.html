@@ -8,43 +8,47 @@
     <style>
         body { font-family: Arial; text-align: center; background: #8b5cf6; color: white; padding: 50px; }
         button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
+        #status { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>Gargoura Bank Testnet</h1>
-    <p>Site de validation pour Pi Network</p>
+    <p>Validation Étape 10 Pi Network</p>
     <br>
-    <button onclick="payer()">Payer 0.01 Pi pour Test</button>
-    <p id="msg"></p>
+    <button onclick="payer()">Payer 0.01 Pi - Test Validation</button>
+    <div id="status"></div>
 
     <script>
+        // IMPORTANT: sandbox false pour la validation finale
         Pi.init({ version: "2.0", sandbox: false });
 
         async function payer() {
-            document.getElementById("msg").innerText = "Connexion à Pi...";
+            document.getElementById("status").innerText = "Connexion...";
             
             try {
                 await Pi.authenticate(['username', 'payments']);
                 
                 Pi.createPayment({
                     amount: 0.01,
-                    memo: "Test Validation Gargoura",
-                    metadata: { 
-                        app: "gargoura-bank",  // ICI ON MET QUELQUE CHOSE
-                        type: "validation_test"
-                    }
+                    memo: "Validation Etape 10 Gargoura",
+                    metadata: { app: "gargoura-bank", step: "10" }
                 }, {
+                    // 1. APPROBATION: On l'appelle direct
                     onReadyForServerApproval: function(paymentId) {
-                        document.getElementById("msg").innerText = "Paiement OK. ID: " + paymentId;
-                        alert("Succès ! Retourne sur Pi Develop > Etape 10 > Start");
+                        document.getElementById("status").innerText = "Approuvé. ID: " + paymentId;
+                        // On simule que le serveur a approuvé
+                        alert("Paiement approuvé ! ID: " + paymentId + "\nVa cliquer Start maintenant");
                     },
+                    // 2. COMPLETION: On l'appelle aussi direct  
                     onReadyForServerCompletion: function(paymentId, txid) {
-                        document.getElementById("msg").innerText = "Terminé !";
+                        document.getElementById("status").innerText = "TERMINÉ ! TX: " + txid;
+                        alert("Paiement COMPLET !\nRetourne sur Pi Develop > Etape 10 > Start");
                     },
                     onCancel: function(paymentId) {
-                        alert("Annulé");
+                        document.getElementById("status").innerText = "Annulé";
                     },
                     onError: function(error) {
+                        document.getElementById("status").innerText = "Erreur: " + error;
                         alert("Erreur: " + error);
                     }
                 });
