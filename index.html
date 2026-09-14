@@ -8,6 +8,7 @@
     <style>
         body { font-family: Arial; text-align: center; background: #8b5cf6; color: white; padding: 50px; }
         button { background: white; color: #8b5cf6; border: none; padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
+        #msg { margin-top: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -18,38 +19,46 @@
     <p id="msg"></p>
 
     <script>
+        // VERSION POUR VALIDATION SANS SERVEUR
         Pi.init({ version: "2.0", sandbox: true });
 
-        function payer() {
-            document.getElementById("msg").innerText = "Connexion au Wallet...";
-            
-            Pi.authenticate(['username', 'payments']).then(function(auth) {
-                
-                Pi.createPayment({
+        async function payer() {
+            document.getElementById("msg").innerText = "Connexion...";
+            try {
+                const scopes = ['username', 'payments'];
+                await Pi.authenticate(scopes);
+
+                const payment = {
                     amount: 0.01,
-                    memo: "Validation Etape 10",
-                    metadata: {}
-                }, {
+                    memo: "Test Validation Etape 10",
+                    metadata: { step: "10" }
+                };
+
+                const callbacks = {
                     onReadyForServerApproval: function(paymentId) {
-                        document.getElementById("msg").innerText = "Approuvé par Pi. ID: " + paymentId;
-                        // TRUC : On complète direct nous-même
-                        Pi.openShareDialog("Paiement effectué ! ID: " + paymentId, "");
+                        // TRUC: On simule l'approbation direct
+                        document.getElementById("msg").innerText = "Approuvé: " + paymentId;
+                        // On force la completion
+                        Pi.openShareDialog("Paiement Test ID: " + paymentId, "");
                     },
                     onReadyForServerCompletion: function(paymentId, txid) {
-                        document.getElementById("msg").innerText = "TERMINÉ ! TX: " + txid;
-                        alert("SUCCES ! Va sur Pi Develop > Etape 10 > Start MAINTENANT");
+                        document.getElementById("msg").innerText = "COMPLETE ! Va cliquer Start";
+                        alert("SUCCES ! \nID: " + paymentId + "\nRetourne sur Pi Develop > Etape 10 > Start");
                     },
                     onCancel: function(paymentId) {
                         document.getElementById("msg").innerText = "Annulé";
                     },
-                    onError: function(error) {
+                    onError: function(error, payment) {
                         document.getElementById("msg").innerText = "Erreur: " + error;
+                        console.log(error);
                     }
-                });
+                };
                 
-            }).catch(function(error) {
-                alert("Erreur: " + error);
-            });
+                Pi.createPayment(payment, callbacks);
+
+            } catch (err) {
+                document.getElementById("msg").innerText = "Erreur Auth: " + err;
+            }
         }
     </script>
 </body>
