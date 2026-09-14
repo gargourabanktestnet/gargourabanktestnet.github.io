@@ -12,37 +12,44 @@
 </head>
 <body>
     <h1>Gargoura Bank Testnet</h1>
-    <p>Validation Étape 10</p>
+    <p>Validation Étape 10 Pi</p>
     <br>
-    <button onclick="payer()">CLIQUE ICI POUR TEST</button>
+    <button onclick="payer()">VALIDER ÉTAPE 10</button>
     <p id="msg"></p>
 
     <script>
-        Pi.init({ version: "2.0", sandbox: true }); // sandbox TRUE pour test
+        Pi.init({ version: "2.0", sandbox: true });
 
-        async function payer() {
-            document.getElementById("msg").innerText = "Chargement...";
-            const { username } = await Pi.authenticate(['username', 'payments']);
+        function payer() {
+            document.getElementById("msg").innerText = "Connexion au Wallet...";
             
-            const paymentData = {
-                amount: 0.01,
-                memo: `Test ${username}`,
-                metadata: { "validation": "etape10" }
-            };
-
-            const callbacks = {
-                onReadyForServerApproval: (paymentId) => {
-                    // ICI on ne fait rien, on laisse Pi gérer
-                    document.getElementById("msg").innerText = "En attente validation Pi...";
-                },
-                onReadyForServerCompletion: (paymentId, txid) => {
-                    document.getElementById("msg").innerText = "Succès ! Va sur Pi Develop";
-                    alert("Parfait ! Retourne sur Pi Develop > Etape 10 > Start maintenant");
-                },
-                onCancel: (paymentId) => { document.getElementById("msg").innerText = "Annulé"; },
-                onError: (error) => { document.getElementById("msg").innerText = "Erreur: " + error; }
-            };
-            Pi.createPayment(paymentData, callbacks);
+            Pi.authenticate(['username', 'payments']).then(function(auth) {
+                
+                Pi.createPayment({
+                    amount: 0.01,
+                    memo: "Validation Etape 10",
+                    metadata: {}
+                }, {
+                    onReadyForServerApproval: function(paymentId) {
+                        document.getElementById("msg").innerText = "Approuvé par Pi. ID: " + paymentId;
+                        // TRUC : On complète direct nous-même
+                        Pi.openShareDialog("Paiement effectué ! ID: " + paymentId, "");
+                    },
+                    onReadyForServerCompletion: function(paymentId, txid) {
+                        document.getElementById("msg").innerText = "TERMINÉ ! TX: " + txid;
+                        alert("SUCCES ! Va sur Pi Develop > Etape 10 > Start MAINTENANT");
+                    },
+                    onCancel: function(paymentId) {
+                        document.getElementById("msg").innerText = "Annulé";
+                    },
+                    onError: function(error) {
+                        document.getElementById("msg").innerText = "Erreur: " + error;
+                    }
+                });
+                
+            }).catch(function(error) {
+                alert("Erreur: " + error);
+            });
         }
     </script>
 </body>
